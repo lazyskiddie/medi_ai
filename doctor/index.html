@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAI Pro — Hardware-Integrated Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Syne:wght@400;600;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-1"></div>
+
+        <div class="app">
+
+        <header>
+            <div class="brand">
+            <div class="brand-icon">⚕️</div>
+            <div>
+                <div class="brand-name">MediAI Pro</div>
+                <div class="brand-tag">Hardware-Integrated Diagnostics</div>
+            </div>
+            </div>
+            <div class="system-status">
+            <div class="status-dot" id="systemDot"></div>
+      <span id="systemStatusText">SYSTEM IDLE</span>
+    </div>
+  </header>
+
+  <!-- PATIENT BAR -->
+  <div class="patient-bar">
+    <div class="pfield">
+      <label>Patient Name</label>
+      <input type="text" id="patName" placeholder="Full name">
+    </div>
+    <div class="pfield">
+      <label>Age</label>
+      <input type="number" id="patAge" placeholder="Years" min="0" max="120">
+    </div>
+    <div class="pfield">
+      <label>Gender</label>
+      <select id="patGender">
+        <option value="">Select</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="pfield">
+      <label>Known Conditions</label>
+      <input type="text" id="patHistory" placeholder="e.g. diabetes...">
+    </div>
+  </div>
+
+  <div class="section-label">Instrument Readings</div>
+
+  <div class="instruments-grid" id="instrumentsGrid">
+
+    <div class="instrument-card" id="card-thermo">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🌡️</div>
+          <div>
+            <div class="inst-name">Thermometer</div>
+            <div class="inst-protocol" id="proto-thermo">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-thermo">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-thermo">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: 97.0 – 99.5 °F</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-thermo"></div></div>
+      <canvas class="waveform-canvas" id="wave-thermo"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('thermo')" id="ble-thermo">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('thermo')" id="ser-thermo">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('thermo')" id="wifi-thermo">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('thermo')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <div class="instrument-card" id="card-bp">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🩺</div>
+          <div>
+            <div class="inst-name">Blood Pressure Monitor</div>
+            <div class="inst-protocol" id="proto-bp">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-bp">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-bp">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: 90/60 – 130/85 mmHg</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-bp"></div></div>
+      <canvas class="waveform-canvas" id="wave-bp"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('bp')" id="ble-bp">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('bp')" id="ser-bp">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('bp')" id="wifi-bp">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('bp')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <!-- Pulse Oximeter -->
+    <div class="instrument-card" id="card-spo2">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🫁</div>
+          <div>
+            <div class="inst-name">Pulse Oximeter</div>
+            <div class="inst-protocol" id="proto-spo2">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-spo2">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-spo2">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: SpO₂ ≥95% · HR 60–100 bpm</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-spo2"></div></div>
+      <canvas class="waveform-canvas" id="wave-spo2"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('spo2')" id="ble-spo2">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('spo2')" id="ser-spo2">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('spo2')" id="wifi-spo2">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('spo2')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <!-- Glucometer -->
+    <div class="instrument-card" id="card-glucose">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🩸</div>
+          <div>
+            <div class="inst-name">Glucometer</div>
+            <div class="inst-protocol" id="proto-glucose">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-glucose">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-glucose">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal (fasting): 70–100 mg/dL</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-glucose"></div></div>
+      <canvas class="waveform-canvas" id="wave-glucose"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('glucose')" id="ble-glucose">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('glucose')" id="ser-glucose">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('glucose')" id="wifi-glucose">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('glucose')">⚡ Demo</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SYMPTOMS -->
+  <div class="symptoms-section">
+    <div class="section-label" style="margin-bottom:1rem">Patient Symptoms</div>
+    <div class="symptom-tags" id="symTags"></div>
+    <textarea class="symptom-input" id="symText" placeholder="Describe additional symptoms, duration, severity... e.g. 'Sharp chest pain for 2 days, worse when breathing deeply. Mild fever since yesterday.'"></textarea>
+  </div>
+
+  <!-- DIAGNOSE -->
+  <div class="diagnose-wrap">
+    <button class="btn-diagnose" onclick="runDiagnosis()" id="btnDiagnose">
+      <span>⚕ &nbsp; Run AI Diagnosis</span>
+    </button>
+    <div class="btn-readiness">
+      <div class="readiness-item"><div class="r-dot" id="rd-thermo"></div>Thermometer</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-bp"></div>BP Monitor</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-spo2"></div>Oximeter</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-glucose"></div>Glucometer</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection">
+    <div style="height:2rem"></div>
+    <div class="section-label">Diagnostic Report</div>
+
+    <div class="result-header">
+      <div class="result-top">
+        <div>
+          <div class="result-diagnosis-name" id="rDiagName">—</div>
+          <div class="result-timestamp" id="rTimestamp"></div>
+        </div>
+        <div class="severity-pill" id="rSeverity">—</div>
+      </div>
+      <div class="vitals-chips" id="rVitalsChips"></div>
+    </div>
+
+    <div class="result-body">
+      <div class="result-content" id="rContent"></div>
+    </div>
+
+    <button class="btn-new" onclick="resetAll()">↺ &nbsp; New Patient Consultation</button>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ MediAI Pro is for informational and triage assistance only.<br>
+    Always consult a licensed medical professional. Not a substitute for clinical diagnosis or treatment.
+  </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+  <div class="loading-orb">
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-core">🔬</div>
+  </div>
+  <div class="loading-stages">
+    <div class="loading-stage-text" id="loadStageText">Initializing...</div>
+    <div class="loading-sub">AI analysis in progress</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+
+</body>
+</html>
