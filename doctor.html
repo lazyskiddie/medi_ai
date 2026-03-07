@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediAI Pro — Hardware-Integrated Diagnostics</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Syne:wght@400;600;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- <link rel="stylesheet" href="style.css"> -->
+<style>
+  :root {
+  --bg: #04080f;
+  --bg2: #070e1a;
+  --surface: #0a1628;
+  --card: #0d1d35;
+  --border: #152d4a;
+  --border2: #1e3f63;
+  --cyan: #00e5ff;
+  --green: #00ff88;
+  --yellow: #ffd60a;
+  --red: #ff3d5a;
+  --purple: #bf5fff;
+  --text: #ddeeff;
+  --muted: #4a7a9b;
+  --dim: #2a4d6a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated grid bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridShift 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+
+/* Glow blobs */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.12;
+}
+.blob-1 { width: 500px; height: 500px; background: var(--cyan); top: -200px; left: -100px; }
+.blob-2 { width: 400px; height: 400px; background: var(--purple); bottom: -150px; right: -100px; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+  animation: fadeDown 0.7s ease;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  box-shadow: 0 0 20px rgba(0,229,255,0.35);
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0,229,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.4rem 1rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: all 0.3s;
+}
+.status-dot.ready { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+.status-dot.scanning { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: pulse 0.5s infinite; }
+.status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+/* ── PATIENT INFO BAR ── */
+.patient-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
+
+@media (max-width: 640px) { .patient-bar { grid-template-columns: 1fr 1fr; } }
+
+.pfield label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.pfield input, .pfield select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.pfield input:focus, .pfield select:focus { border-color: var(--cyan); }
+
+/* ── INSTRUMENTS GRID ── */
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.instruments-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease 0.2s both;
+}
+
+@media (max-width: 640px) { .instruments-grid { grid-template-columns: 1fr; } }
+
+/* ── INSTRUMENT CARD ── */
+.instrument-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.instrument-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.instrument-card.connected { border-color: rgba(0,255,136,0.3); box-shadow: 0 0 20px rgba(0,255,136,0.05); }
+.instrument-card.connected::before { background: linear-gradient(90deg, var(--green), transparent); }
+.instrument-card.reading { border-color: rgba(0,229,255,0.4); box-shadow: 0 0 20px rgba(0,229,255,0.08); }
+.instrument-card.reading::before { background: linear-gradient(90deg, var(--cyan), var(--green)); animation: shimmer 1s ease infinite; }
+.instrument-card.error { border-color: rgba(255,61,90,0.3); }
+.instrument-card.error::before { background: var(--red); }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.inst-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+
+.inst-meta { display: flex; align-items: center; gap: 0.8rem; }
+
+.inst-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.inst-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.inst-protocol {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 0.15rem;
+}
+
+.inst-state {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.inst-state.connected { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.3); color: var(--green); }
+.inst-state.reading { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+.inst-state.done { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.3); color: var(--green); }
+.inst-state.error { background: rgba(255,61,90,0.1); border-color: rgba(255,61,90,0.3); color: var(--red); }
+.inst-state.simulated { background: rgba(191,95,255,0.1); border-color: rgba(191,95,255,0.3); color: var(--purple); }
+
+/* Reading display */
+.reading-display {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.reading-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 60%, rgba(0,229,255,0.03));
+}
+
+.reading-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--cyan);
+  text-align: center;
+  line-height: 1;
+  transition: all 0.3s;
+}
+
+.reading-unit {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.reading-placeholder {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--dim);
+  letter-spacing: 1px;
+}
+
+.reading-normal-range {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--dim);
+  text-align: center;
+  margin-bottom: 0.8rem;
+  letter-spacing: 1px;
+}
+
+/* Status bar */
+.reading-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.reading-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.8s ease, background 0.3s;
+}
+
+/* Connect buttons */
+.connect-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-connect {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.btn-connect:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,229,255,0.05);
+}
+
+.btn-connect.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,229,255,0.1);
+  box-shadow: 0 0 10px rgba(0,229,255,0.15);
+}
+
+.btn-connect:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-connect.simulate {
+  border-color: var(--border2);
+  color: var(--purple);
+}
+
+.btn-connect.simulate:hover {
+  border-color: var(--purple);
+  background: rgba(191,95,255,0.07);
+}
+
+/* Live waveform canvas */
+.waveform-canvas {
+  width: 100%;
+  height: 36px;
+  display: none;
+}
+.instrument-card.reading .waveform-canvas { display: block; }
+
+/* ── SYMPTOMS SECTION ── */
+.symptoms-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease 0.3s both;
+}
+
+.symptom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stag {
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.stag:hover { border-color: var(--cyan); color: var(--text); }
+.stag.on { background: rgba(0,229,255,0.1); border-color: var(--cyan); color: var(--cyan); }
+
+.symptom-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-top: 0.2rem;
+}
+.symptom-input:focus { border-color: var(--cyan); }
+
+/* ── DIAGNOSE BUTTON ── */
+.diagnose-wrap {
+  animation: fadeUp 0.6s ease 0.4s both;
+}
+
+.btn-diagnose {
+  width: 100%;
+  padding: 1.15rem;
+  background: linear-gradient(135deg, #00e5ff, #00ff88);
+  border: none;
+  border-radius: 12px;
+  color: #04080f;
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-diagnose::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #00ff88, #00e5ff);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-diagnose:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,229,255,0.3); }
+.btn-diagnose:hover::before { opacity: 1; }
+.btn-diagnose:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-diagnose span { position: relative; z-index: 1; }
+
+.btn-readiness {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.readiness-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.r-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.r-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.r-dot.warn { background: var(--yellow); }
+.r-dot.sim { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+
+/* ── LOADING ── */
+#loadingOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4,8,15,0.92);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+#loadingOverlay.visible { display: flex; }
+
+.loading-orb {
+  width: 100px; height: 100px;
+  position: relative;
+}
+
+.orb-core {
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cyan), var(--green));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  animation: orbPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0,229,255,0.5);
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  animation: orbRing 2s ease-out infinite;
+}
+
+.orb-ring:nth-child(2) { animation-delay: 0.5s; }
+.orb-ring:nth-child(3) { animation-delay: 1s; }
+
+@keyframes orbRing {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.loading-stages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-stage-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  animation: textPulse 1s ease-in-out infinite;
+}
+
+.loading-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@keyframes textPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── RESULTS ── */
+#resultsSection {
+  display: none;
+  animation: fadeUp 0.5s ease;
+}
+
+#resultsSection.visible { display: block; }
+
+.result-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--green), var(--purple));
+}
+
+.result-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.result-diagnosis-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.result-timestamp {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  letter-spacing: 1px;
+}
+
+.severity-pill {
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sev-low { background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
+.sev-moderate { background: rgba(255,214,10,0.12); border: 1px solid rgba(255,214,10,0.3); color: var(--yellow); }
+.sev-high { background: rgba(255,61,90,0.12); border: 1px solid rgba(255,61,90,0.3); color: var(--red); }
+
+.vitals-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.vchip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  text-align: center;
+}
+
+.vchip-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+.vchip.abnormal .vchip-val { color: var(--red); }
+.vchip.borderline .vchip-val { color: var(--yellow); }
+
+.vchip-label {
+  font-size: 0.6rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.15rem;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+}
+
+.vchip-src {
+  font-size: 0.55rem;
+  color: var(--dim);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 0.1rem;
+}
+
+.result-body {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+
+.result-content {
+  font-size: 0.92rem;
+  line-height: 1.85;
+  color: #aaccdd;
+}
+
+.result-content strong {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.btn-new {
+  width: 100%;
+  padding: 0.9rem;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 1rem;
+}
+
+.btn-new:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,229,255,0.04); }
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 0.6rem 1.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text);
+  letter-spacing: 1px;
+  z-index: 200;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(0,255,136,0.4); color: var(--green); }
+.toast.error-t { border-color: rgba(255,61,90,0.4); color: var(--red); }
+
+/* Animations */
+@keyframes fadeDown { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
+
+.disclaimer {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--dim);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚕️</div>
+      <div>
+        <div class="brand-name">MediAI Pro</div>
+        <div class="brand-tag">Hardware-Integrated Diagnostics</div>
+      </div>
+    </div>
+    <div class="system-status">
+      <div class="status-dot" id="systemDot"></div>
+      <span id="systemStatusText">SYSTEM IDLE</span>
+    </div>
+  </header>
+
+  <!-- PATIENT BAR -->
+  <div class="patient-bar">
+    <div class="pfield">
+      <label>Patient Name</label>
+      <input type="text" id="patName" placeholder="Full name">
+    </div>
+    <div class="pfield">
+      <label>Age</label>
+      <input type="number" id="patAge" placeholder="Years" min="0" max="120">
+    </div>
+    <div class="pfield">
+      <label>Gender</label>
+      <select id="patGender">
+        <option value="">Select</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="pfield">
+      <label>Known Conditions</label>
+      <input type="text" id="patHistory" placeholder="e.g. diabetes...">
+    </div>
+  </div>
+
+  <!-- INSTRUMENTS -->
+  <div class="section-label">Instrument Readings</div>
+
+  <div class="instruments-grid" id="instrumentsGrid">
+
+    <!-- Thermometer -->
+    <div class="instrument-card" id="card-thermo">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🌡️</div>
+          <div>
+            <div class="inst-name">Thermometer</div>
+            <div class="inst-protocol" id="proto-thermo">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-thermo">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-thermo">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: 97.0 – 99.5 °F</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-thermo"></div></div>
+      <canvas class="waveform-canvas" id="wave-thermo"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('thermo')" id="ble-thermo">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('thermo')" id="ser-thermo">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('thermo')" id="wifi-thermo">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('thermo')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <!-- BP Monitor -->
+    <div class="instrument-card" id="card-bp">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🩺</div>
+          <div>
+            <div class="inst-name">Blood Pressure Monitor</div>
+            <div class="inst-protocol" id="proto-bp">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-bp">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-bp">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: 90/60 – 130/85 mmHg</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-bp"></div></div>
+      <canvas class="waveform-canvas" id="wave-bp"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('bp')" id="ble-bp">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('bp')" id="ser-bp">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('bp')" id="wifi-bp">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('bp')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <!-- Pulse Oximeter -->
+    <div class="instrument-card" id="card-spo2">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🫁</div>
+          <div>
+            <div class="inst-name">Pulse Oximeter</div>
+            <div class="inst-protocol" id="proto-spo2">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-spo2">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-spo2">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal: SpO₂ ≥95% · HR 60–100 bpm</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-spo2"></div></div>
+      <canvas class="waveform-canvas" id="wave-spo2"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('spo2')" id="ble-spo2">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('spo2')" id="ser-spo2">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('spo2')" id="wifi-spo2">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('spo2')">⚡ Demo</button>
+      </div>
+    </div>
+
+    <!-- Glucometer -->
+    <div class="instrument-card" id="card-glucose">
+      <div class="inst-header">
+        <div class="inst-meta">
+          <div class="inst-icon">🩸</div>
+          <div>
+            <div class="inst-name">Glucometer</div>
+            <div class="inst-protocol" id="proto-glucose">BLE · USB · WiFi</div>
+          </div>
+        </div>
+        <div class="inst-state" id="state-glucose">Disconnected</div>
+      </div>
+      <div class="reading-display" id="display-glucose">
+        <div class="reading-placeholder">——— Awaiting Device ———</div>
+      </div>
+      <div class="reading-normal-range">Normal (fasting): 70–100 mg/dL</div>
+      <div class="reading-bar"><div class="reading-bar-fill" id="bar-glucose"></div></div>
+      <canvas class="waveform-canvas" id="wave-glucose"></canvas>
+      <div class="connect-row">
+        <button class="btn-connect" onclick="connectBLE('glucose')" id="ble-glucose">📡 BLE</button>
+        <button class="btn-connect" onclick="connectSerial('glucose')" id="ser-glucose">🔌 USB</button>
+        <button class="btn-connect" onclick="connectWiFi('glucose')" id="wifi-glucose">📶 WiFi</button>
+        <button class="btn-connect simulate" onclick="simulateDevice('glucose')">⚡ Demo</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SYMPTOMS -->
+  <div class="symptoms-section">
+    <div class="section-label" style="margin-bottom:1rem">Patient Symptoms</div>
+    <div class="symptom-tags" id="symTags"></div>
+    <textarea class="symptom-input" id="symText" placeholder="Describe additional symptoms, duration, severity... e.g. 'Sharp chest pain for 2 days, worse when breathing deeply. Mild fever since yesterday.'"></textarea>
+  </div>
+
+  <!-- DIAGNOSE -->
+  <div class="diagnose-wrap">
+    <button class="btn-diagnose" onclick="runDiagnosis()" id="btnDiagnose">
+      <span>⚕ &nbsp; Run AI Diagnosis</span>
+    </button>
+    <div class="btn-readiness">
+      <div class="readiness-item"><div class="r-dot" id="rd-thermo"></div>Thermometer</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-bp"></div>BP Monitor</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-spo2"></div>Oximeter</div>
+      <div class="readiness-item"><div class="r-dot" id="rd-glucose"></div>Glucometer</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection">
+    <div style="height:2rem"></div>
+    <div class="section-label">Diagnostic Report</div>
+
+    <div class="result-header">
+      <div class="result-top">
+        <div>
+          <div class="result-diagnosis-name" id="rDiagName">—</div>
+          <div class="result-timestamp" id="rTimestamp"></div>
+        </div>
+        <div class="severity-pill" id="rSeverity">—</div>
+      </div>
+      <div class="vitals-chips" id="rVitalsChips"></div>
+    </div>
+
+    <div class="result-body">
+      <div class="result-content" id="rContent"></div>
+    </div>
+
+    <button class="btn-new" onclick="resetAll()">↺ &nbsp; New Patient Consultation</button>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ MediAI Pro is for informational and triage assistance only.<br>
+    Always consult a licensed medical professional. Not a substitute for clinical diagnosis or treatment.
+  </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+  <div class="loading-orb">
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-core">🔬</div>
+  </div>
+  <div class="loading-stages">
+    <div class="loading-stage-text" id="loadStageText">Initializing...</div>
+    <div class="loading-sub">AI analysis in progress</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const readings = { thermo: null, bp: null, spo2: null, glucose: null };
+const connectionType = { thermo: null, bp: null, spo2: null, glucose: null };
+const simIntervals = {};
+const wavePoints = { thermo: [], bp: [], spo2: [], glucose: [] };
+
+// BLE UUIDs (standard GATT health profiles)
+const BLE_CONFIG = {
+  thermo: {
+    service: '00001809-0000-1000-8000-00805f9b34fb',
+    char: '00002a1c-0000-1000-8000-00805f9b34fb',
+    name: 'Health Thermometer'
+  },
+  bp: {
+    service: '00001810-0000-1000-8000-00805f9b34fb',
+    char: '00002a35-0000-1000-8000-00805f9b34fb',
+    name: 'Blood Pressure'
+  },
+  spo2: {
+    service: '00001822-0000-1000-8000-00805f9b34fb',
+    char: '00002a5f-0000-1000-8000-00805f9b34fb',
+    name: 'Pulse Oximeter'
+  },
+  glucose: {
+    service: '00001808-0000-1000-8000-00805f9b34fb',
+    char: '00002a18-0000-1000-8000-00805f9b34fb',
+    name: 'Glucose'
+  }
+};
+
+// Normal ranges for color coding
+const NORMAL = {
+  thermo: { min: 97.0, max: 99.5, absMin: 93, absMax: 108 },
+  bp_sys: { min: 90, max: 130 },
+  bp_dia: { min: 60, max: 85 },
+  spo2: { min: 95, max: 100, absMin: 80, absMax: 100 },
+  hr: { min: 60, max: 100, absMin: 30, absMax: 200 },
+  glucose: { min: 70, max: 100, absMin: 40, absMax: 500 }
+};
+
+// ════════════════════════════════════════════
+// SYMPTOMS
+// ════════════════════════════════════════════
+const SYMS = ["Fever","Headache","Fatigue","Cough","Sore Throat","Chest Pain",
+  "Shortness of Breath","Dizziness","Nausea","Vomiting","Diarrhea",
+  "Abdominal Pain","Back Pain","Joint Pain","Muscle Aches","Rash",
+  "Swelling","Palpitations","Chills","Night Sweats","Loss of Appetite",
+  "Excessive Thirst","Frequent Urination","Confusion","Blurred Vision",
+  "Runny Nose","Weakness","Numbness","Anxiety","Weight Loss"];
+
+const selectedSyms = new Set();
+const tagsCont = document.getElementById('symTags');
+SYMS.forEach(s => {
+  const t = document.createElement('div');
+  t.className = 'stag';
+  t.textContent = s;
+  t.onclick = () => {
+    if (selectedSyms.has(s)) { selectedSyms.delete(s); t.classList.remove('on'); }
+    else { selectedSyms.add(s); t.classList.add('on'); }
+  };
+  tagsCont.appendChild(t);
+});
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════
+function setCardState(id, state) {
+  const card = document.getElementById(`card-${id}`);
+  card.className = `instrument-card ${state}`;
+  const stateEl = document.getElementById(`state-${id}`);
+  const labels = { connected:'Connected', reading:'Reading...', done:'Done', error:'Error', simulated:'Simulated', '':'Disconnected' };
+  stateEl.textContent = labels[state] || state;
+  stateEl.className = `inst-state ${state}`;
+}
+
+function setReadingDisplay(id, html) {
+  document.getElementById(`display-${id}`).innerHTML = html;
+}
+
+function updateBar(id, pct, color) {
+  const bar = document.getElementById(`bar-${id}`);
+  bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+  bar.style.background = color;
+}
+
+function updateReadiness(id, state) {
+  const dot = document.getElementById(`rd-${id}`);
+  dot.className = `r-dot ${state}`;
+}
+
+function setSystemStatus(state, text) {
+  document.getElementById('systemDot').className = `status-dot ${state}`;
+  document.getElementById('systemStatusText').textContent = text;
+}
+
+// ════════════════════════════════════════════
+// READING RENDERER
+// ════════════════════════════════════════════
+function renderReading(id, data) {
+  readings[id] = data;
+  setCardState(id, 'done');
+
+  let html = '';
+  let pct = 50;
+  let color = 'var(--green)';
+  let abnormal = false;
+
+  if (id === 'thermo') {
+    const f = data.tempF;
+    abnormal = f < NORMAL.thermo.min || f > NORMAL.thermo.max;
+    if (f > 103) color = 'var(--red)';
+    else if (abnormal) color = 'var(--yellow)';
+    pct = ((f - NORMAL.thermo.absMin) / (NORMAL.thermo.absMax - NORMAL.thermo.absMin)) * 100;
+    html = `<div><div class="reading-value" style="color:${abnormal ? color : 'var(--cyan)'}">${f.toFixed(1)}</div><div class="reading-unit">°F (${((f-32)*5/9).toFixed(1)} °C)</div></div>`;
+  }
+  else if (id === 'bp') {
+    const s = data.sys, d = data.dia;
+    const sAbn = s < NORMAL.bp_sys.min || s > NORMAL.bp_sys.max;
+    const dAbn = d < NORMAL.bp_dia.min || d > NORMAL.bp_dia.max;
+    abnormal = sAbn || dAbn;
+    if (s > 160 || d > 100) color = 'var(--red)';
+    else if (abnormal) color = 'var(--yellow)';
+    pct = ((s - 60) / (200 - 60)) * 100;
+    html = `<div><div class="reading-value" style="color:${abnormal ? color : 'var(--cyan)'};font-size:1.6rem">${s}/${d}</div><div class="reading-unit">mmHg · Pulse: ${data.pulse} bpm</div></div>`;
+  }
+  else if (id === 'spo2') {
+    const sp = data.spo2, hr = data.hr;
+    abnormal = sp < NORMAL.spo2.min;
+    if (sp < 90) color = 'var(--red)';
+    else if (sp < 95) color = 'var(--yellow)';
+    pct = ((sp - 80) / 20) * 100;
+    html = `<div><div class="reading-value" style="color:${abnormal ? color : 'var(--cyan)'}">${sp}%</div><div class="reading-unit">SpO₂ · HR: ${hr} bpm</div></div>`;
+  }
+  else if (id === 'glucose') {
+    const g = data.glucose;
+    abnormal = g < NORMAL.glucose.min || g > NORMAL.glucose.max;
+    if (g > 200 || g < 60) color = 'var(--red)';
+    else if (abnormal) color = 'var(--yellow)';
+    pct = ((g - 40) / (300 - 40)) * 100;
+    html = `<div><div class="reading-value" style="color:${abnormal ? color : 'var(--cyan)'}">${g}</div><div class="reading-unit">mg/dL (fasting)</div></div>`;
+  }
+
+  setReadingDisplay(id, html);
+  updateBar(id, pct, color);
+  updateReadiness(id, abnormal ? 'warn' : 'ok');
+  checkAllReady();
+}
+
+function checkAllReady() {
+  const allDone = Object.values(readings).every(r => r !== null);
+  const someData = Object.values(readings).some(r => r !== null);
+  if (allDone) {
+    setSystemStatus('ready', 'ALL SENSORS READY');
+    toast('✓ All instruments connected — Ready to diagnose', 'success');
+  } else if (someData) {
+    setSystemStatus('scanning', 'PARTIAL DATA');
+  }
+}
+
+// ════════════════════════════════════════════
+// BLE CONNECTION
+// ════════════════════════════════════════════
+async function connectBLE(id) {
+  if (!navigator.bluetooth) {
+    toast('⚠ Web Bluetooth not supported. Use Chrome on PC/Android', 'error-t');
+    return;
+  }
+  try {
+    setSystemStatus('scanning', `SCANNING BLE — ${id.toUpperCase()}`);
+    setCardState(id, 'reading');
+    document.getElementById(`proto-${id}`).textContent = 'Bluetooth BLE';
+    toast(`Scanning for ${BLE_CONFIG[id].name} device...`);
+
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [BLE_CONFIG[id].service] }],
+      optionalServices: [BLE_CONFIG[id].service]
+    });
+
+    toast(`Connecting to ${device.name || 'device'}...`);
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(BLE_CONFIG[id].service);
+    const char = await service.getCharacteristic(BLE_CONFIG[id].char);
+
+    connectionType[id] = 'BLE';
+    document.getElementById(`ble-${id}`).classList.add('active');
+
+    await char.startNotifications();
+    char.addEventListener('characteristicvaluechanged', (e) => {
+      const raw = parseBLEValue(id, e.target.value);
+      if (raw) renderReading(id, raw);
+    });
+
+    setCardState(id, 'connected');
+    toast(`✓ ${device.name || 'Device'} connected via BLE`, 'success');
+
+  } catch(err) {
+    setCardState(id, 'error');
+    setSystemStatus('error', 'BLE ERROR');
+    console.error(err);
+    if (err.name === 'NotFoundError') toast('No device selected', '');
+    else toast(`BLE Error: ${err.message}`, 'error-t');
+  }
+}
+
+function parseBLEValue(id, dataView) {
+  try {
+    if (id === 'thermo') {
+      const flags = dataView.getUint8(0);
+      let temp = (dataView.getUint8(1) | (dataView.getUint8(2) << 8) | (dataView.getUint8(3) << 16));
+      const exp = dataView.getInt8(4);
+      const celsius = temp * Math.pow(10, exp);
+      return { tempF: celsius * 9/5 + 32, tempC: celsius };
+    }
+    if (id === 'bp') {
+      const flags = dataView.getUint8(0);
+      const sys = dataView.getUint16(1, true);
+      const dia = dataView.getUint16(3, true);
+      const pulse = dataView.getUint16(14, true);
+      return { sys, dia, pulse };
+    }
+    if (id === 'spo2') {
+      const flags = dataView.getUint8(0);
+      const spo2 = dataView.getUint8(1);
+      const hr = dataView.getUint16(3, true);
+      return { spo2, hr };
+    }
+    if (id === 'glucose') {
+      const glucose = Math.round(dataView.getFloat32(3, true) * 100000);
+      return { glucose };
+    }
+  } catch(e) { console.warn('BLE parse error', e); return null; }
+}
+
+// ════════════════════════════════════════════
+// WEB SERIAL (USB)
+// ════════════════════════════════════════════
+async function connectSerial(id) {
+  if (!navigator.serial) {
+    toast('⚠ Web Serial requires Chrome on PC. Try USB with Chrome browser.', 'error-t');
+    return;
+  }
+  try {
+    setCardState(id, 'reading');
+    setSystemStatus('scanning', `USB SERIAL — ${id.toUpperCase()}`);
+    document.getElementById(`proto-${id}`).textContent = 'USB Serial';
+    toast(`Select USB port for ${id}...`);
+
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 9600 });
+
+    connectionType[id] = 'SERIAL';
+    document.getElementById(`ser-${id}`).classList.add('active');
+    setCardState(id, 'connected');
+    toast(`✓ USB Serial connected for ${id}`, 'success');
+
+    const reader = port.readable.getReader();
+    let buffer = '';
+
+    (async () => {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += new TextDecoder().decode(value);
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          const parsed = parseSerialLine(id, line.trim());
+          if (parsed) renderReading(id, parsed);
+        }
+      }
+    })();
+
+  } catch(err) {
+    setCardState(id, 'error');
+    if (err.name !== 'NotFoundError') toast(`Serial Error: ${err.message}`, 'error-t');
+    else toast('No port selected', '');
+  }
+}
+
+function parseSerialLine(id, line) {
+  // Expected JSON format from microcontroller: {"temp":98.6} or {"sys":120,"dia":80,"pulse":72}
+  try {
+    const data = JSON.parse(line);
+    if (id === 'thermo' && data.temp) return { tempF: data.temp, tempC: (data.temp - 32) * 5/9 };
+    if (id === 'bp' && data.sys) return { sys: data.sys, dia: data.dia, pulse: data.pulse || 72 };
+    if (id === 'spo2' && data.spo2) return { spo2: data.spo2, hr: data.hr || 75 };
+    if (id === 'glucose' && data.glucose) return { glucose: data.glucose };
+  } catch(e) {
+    // Try plain value format: "98.6" or "120/80"
+    if (id === 'thermo') { const v = parseFloat(line); if (v > 90 && v < 110) return { tempF: v, tempC:(v-32)*5/9 }; }
+    if (id === 'spo2') { const v = parseInt(line); if (v > 50 && v <= 100) return { spo2: v, hr: 75 }; }
+    if (id === 'glucose') { const v = parseInt(line); if (v > 30 && v < 600) return { glucose: v }; }
+    if (id === 'bp' && line.includes('/')) {
+      const [s, d] = line.split('/').map(Number);
+      if (s > 50 && s < 250) return { sys: s, dia: d, pulse: 72 };
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════
+// WiFi HTTP POLLING
+// ════════════════════════════════════════════
+async function connectWiFi(id) {
+  const ip = prompt(`Enter device IP address for ${id.toUpperCase()} (e.g. 192.168.1.105):`, '192.168.1.100');
+  if (!ip) return;
+
+  const port = prompt('Enter port (default 80):', '80');
+  const endpoint = `http://${ip}:${port || 80}/data`;
+
+  setCardState(id, 'reading');
+  setSystemStatus('scanning', `WIFI POLLING — ${id.toUpperCase()}`);
+  document.getElementById(`proto-${id}`).textContent = `WiFi · ${ip}`;
+  document.getElementById(`wifi-${id}`).classList.add('active');
+  toast(`Connecting to ${endpoint}...`);
+
+  let failCount = 0;
+  connectionType[id] = 'WiFi';
+
+  const pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(endpoint, { signal: AbortSignal.timeout(3000) });
+      const data = await res.json();
+
+      failCount = 0;
+      setCardState(id, 'connected');
+
+      const parsed = parseWiFiData(id, data);
+      if (parsed) renderReading(id, parsed);
+
+    } catch(err) {
+      failCount++;
+      if (failCount >= 3) {
+        clearInterval(pollInterval);
+        setCardState(id, 'error');
+        toast(`WiFi device ${id} unreachable`, 'error-t');
+      }
+    }
+  }, 2000);
+
+  simIntervals[`wifi-${id}`] = pollInterval;
+}
+
+function parseWiFiData(id, data) {
+  if (id === 'thermo') return data.temp ? { tempF: data.temp, tempC: (data.temp-32)*5/9 } : null;
+  if (id === 'bp') return data.sys ? { sys: data.sys, dia: data.dia, pulse: data.pulse || 72 } : null;
+  if (id === 'spo2') return data.spo2 ? { spo2: data.spo2, hr: data.hr || 75 } : null;
+  if (id === 'glucose') return data.glucose ? { glucose: data.glucose } : null;
+  return null;
+}
+
+// ════════════════════════════════════════════
+// SIMULATION (Demo Mode)
+// ════════════════════════════════════════════
+const SIM_VALUES = {
+  thermo: () => ({ tempF: +(98 + Math.random() * 3.5).toFixed(1) }),
+  bp: () => {
+    const sys = Math.round(110 + Math.random() * 50);
+    const dia = Math.round(65 + Math.random() * 30);
+    return { sys, dia, pulse: Math.round(60 + Math.random() * 50) };
+  },
+  spo2: () => ({ spo2: Math.round(92 + Math.random() * 8), hr: Math.round(58 + Math.random() * 50) }),
+  glucose: () => ({ glucose: Math.round(75 + Math.random() * 100) })
+};
+
+function simulateDevice(id) {
+  if (simIntervals[id]) {
+    clearInterval(simIntervals[id]);
+    delete simIntervals[id];
+  }
+
+  setCardState(id, 'reading');
+  document.getElementById(`proto-${id}`).textContent = 'Simulation Mode';
+  connectionType[id] = 'SIMULATED';
+  toast(`⚡ Simulating ${id} sensor readings...`);
+
+  // Animate waveform
+  startWaveform(id);
+
+  // First reading
+  setTimeout(() => {
+    const data = SIM_VALUES[id]();
+    data._simulated = true;
+    renderReading(id, data);
+
+    // Continuous live updates
+    simIntervals[id] = setInterval(() => {
+      const live = SIM_VALUES[id]();
+      live._simulated = true;
+      renderReading(id, live);
+    }, 4000);
+
+    updateReadiness(id, 'sim');
+  }, 1200);
+}
+
+// ════════════════════════════════════════════
+// WAVEFORM ANIMATION
+// ════════════════════════════════════════════
+function startWaveform(id) {
+  const canvas = document.getElementById(`wave-${id}`);
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = 36;
+
+  wavePoints[id] = [];
+  let x = 0;
+
+  const waveInterval = setInterval(() => {
+    if (!document.getElementById(`card-${id}`).classList.contains('reading') &&
+        !document.getElementById(`card-${id}`).classList.contains('done')) {
+      clearInterval(waveInterval);
+      return;
+    }
+
+    x++;
+    const y = 18 + Math.sin(x * 0.3) * 10 + (Math.random() - 0.5) * 4;
+    wavePoints[id].push({ x: (x % (canvas.width / 2)) * 2, y });
+    if (wavePoints[id].length > canvas.width / 2) wavePoints[id].shift();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    wavePoints[id].forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+  }, 60);
+}
+
+// ════════════════════════════════════════════
+// DIAGNOSIS
+// ════════════════════════════════════════════
+const STAGES = [
+  'PARSING VITAL READINGS...',
+  'CROSS-REFERENCING SYMPTOM MATRIX...',
+  'RUNNING DIFFERENTIAL DIAGNOSIS...',
+  'EVALUATING COMPLICATION RISKS...',
+  'COMPILING CLINICAL REPORT...'
+];
+
+async function runDiagnosis() {
+  const hasAny = Object.values(readings).some(r => r !== null);
+  if (!hasAny) {
+    toast('⚠ Connect at least one instrument or use Demo mode', 'error-t');
+    return;
+  }
+
+  document.getElementById('btnDiagnose').disabled = true;
+
+  // Show loading
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('visible');
+  let si = 0;
+  const stageInterval = setInterval(() => {
+    document.getElementById('loadStageText').textContent = STAGES[si % STAGES.length];
+    si++;
+  }, 1200);
+
+  // Build prompt
+  const thermo = readings.thermo;
+  const bp = readings.bp;
+  const spo2 = readings.spo2;
+  const glucose = readings.glucose;
+  const simNote = Object.entries(connectionType).filter(([,v]) => v === 'SIMULATED').map(([k]) => k).join(', ');
+
+  const vitalsBlock = [
+    thermo ? `- Body Temperature: ${thermo.tempF.toFixed(1)}°F (${thermo.tempC ? thermo.tempC.toFixed(1) : ((thermo.tempF-32)*5/9).toFixed(1)}°C)` : null,
+    bp ? `- Blood Pressure: ${bp.sys}/${bp.dia} mmHg  |  Pulse: ${bp.pulse} bpm` : null,
+    spo2 ? `- SpO₂: ${spo2.spo2}%  |  Heart Rate: ${spo2.hr} bpm` : null,
+    glucose ? `- Blood Glucose: ${glucose.glucose} mg/dL` : null,
+  ].filter(Boolean).join('\n');
+
+  const prompt = `You are an expert AI medical diagnostic system with access to real-time instrument data. Analyze all readings carefully and provide a thorough clinical assessment.
+
+PATIENT PROFILE:
+- Name: ${document.getElementById('patName').value || 'Not provided'}
+- Age: ${document.getElementById('patAge').value || 'Not provided'}
+- Gender: ${document.getElementById('patGender').value || 'Not provided'}
+- Known Conditions/Medications: ${document.getElementById('patHistory').value || 'None reported'}
+
+INSTRUMENT READINGS (auto-captured from medical hardware):
+${vitalsBlock || 'No readings captured'}
+${simNote ? `[Note: Simulated data for: ${simNote}]` : '[Source: Live hardware instruments]'}
+
+SYMPTOMS REPORTED BY PATIENT:
+${[...selectedSyms].join(', ') || 'None selected'}
+
+PATIENT DESCRIPTION:
+${document.getElementById('symText').value || 'No additional description provided'}
+
+─────────────────────────────────────
+Please provide a structured clinical diagnostic report with these sections:
+
+**PRIMARY DIAGNOSIS** — State the most likely condition(s). Be specific.
+
+**SEVERITY** — One word: LOW, MODERATE, or HIGH
+
+**VITAL SIGNS ANALYSIS** — Analyze each instrument reading. Flag all abnormal values and explain clinical significance.
+
+**CLINICAL REASONING** — How do the vitals + symptoms together point to this diagnosis?
+
+**DIFFERENTIAL DIAGNOSES** — List 2–3 alternative possibilities to consider.
+
+**RECOMMENDED INVESTIGATIONS** — Specific tests (lab, imaging, etc.) to confirm diagnosis.
+
+**IMMEDIATE MANAGEMENT** — What the patient should do RIGHT NOW.
+
+**EMERGENCY RED FLAGS** — Signs that require immediate ER visit.
+
+Be detailed, clinically accurate, and use accessible language. Do not hedge excessively.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('\n') || 'Unable to generate report.';
+
+    clearInterval(stageInterval);
+    overlay.classList.remove('visible');
+
+    displayResults(text);
+
+  } catch(err) {
+    clearInterval(stageInterval);
+    overlay.classList.remove('visible');
+    document.getElementById('btnDiagnose').disabled = false;
+    toast('Connection error. Please retry.', 'error-t');
+    console.error(err);
+  }
+}
+
+function displayResults(text) {
+  // Parse severity
+  let sev = 'moderate', sevText = 'Moderate Risk', sevClass = 'sev-moderate';
+  if (/SEVERITY[:\s*]+LOW/i.test(text)) { sev='low'; sevText='Low Risk'; sevClass='sev-low'; }
+  else if (/SEVERITY[:\s*]+HIGH/i.test(text)) { sev='high'; sevText='High Risk ⚠'; sevClass='sev-high'; }
+
+  // Parse diagnosis name
+  let diagName = 'Diagnostic Assessment';
+  const dm = text.match(/PRIMARY DIAGNOSIS[^:]*:\s*\*?\*?([^\n*]+)/i);
+  if (dm) diagName = dm[1].trim().replace(/\*+/g,'');
+
+  // Timestamp
+  const now = new Date();
+  const ts = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) + ' · ' +
+             now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('rDiagName').textContent = diagName;
+  document.getElementById('rTimestamp').textContent = `Generated ${ts}`;
+
+  const pill = document.getElementById('rSeverity');
+  pill.textContent = sevText;
+  pill.className = `severity-pill ${sevClass}`;
+
+  // Vitals chips
+  const chips = document.getElementById('rVitalsChips');
+  chips.innerHTML = '';
+
+  const makeChip = (val, label, src, abnormal, borderline) => {
+    const chip = document.createElement('div');
+    chip.className = `vchip ${abnormal ? 'abnormal' : borderline ? 'borderline' : ''}`;
+    chip.innerHTML = `<div class="vchip-val">${val}</div><div class="vchip-label">${label}</div><div class="vchip-src">${src}</div>`;
+    chips.appendChild(chip);
+  };
+
+  if (readings.thermo) {
+    const f = readings.thermo.tempF;
+    makeChip(`${f.toFixed(1)}°F`, 'Temperature', connectionType.thermo, f > 103 || f < 96, f > 99.5 || f < 97);
+  }
+  if (readings.bp) {
+    const abn = readings.bp.sys > 140 || readings.bp.dia > 90 || readings.bp.sys < 90;
+    makeChip(`${readings.bp.sys}/${readings.bp.dia}`, 'BP mmHg', connectionType.bp, abn, readings.bp.sys > 130);
+    makeChip(`${readings.bp.pulse} bpm`, 'Pulse', connectionType.bp, readings.bp.pulse > 100 || readings.bp.pulse < 60, false);
+  }
+  if (readings.spo2) {
+    makeChip(`${readings.spo2.spo2}%`, 'SpO₂', connectionType.spo2, readings.spo2.spo2 < 90, readings.spo2.spo2 < 95);
+    makeChip(`${readings.spo2.hr} bpm`, 'Heart Rate', connectionType.spo2, readings.spo2.hr > 100 || readings.spo2.hr < 60, false);
+  }
+  if (readings.glucose) {
+    const g = readings.glucose.glucose;
+    makeChip(`${g} mg/dL`, 'Glucose', connectionType.glucose, g > 200 || g < 60, g > 100 || g < 70);
+  }
+
+  // Format content
+  const formatted = text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+  document.getElementById('rContent').innerHTML = formatted;
+
+  const resultsSection = document.getElementById('resultsSection');
+  resultsSection.classList.add('visible');
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  document.getElementById('btnDiagnose').disabled = false;
+  toast('✓ Diagnosis complete', 'success');
+  setSystemStatus('ready', 'DIAGNOSIS COMPLETE');
+}
+
+// ════════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════════
+function resetAll() {
+  // Clear simulations
+  Object.keys(simIntervals).forEach(k => { clearInterval(simIntervals[k]); delete simIntervals[k]; });
+
+  // Reset readings
+  Object.keys(readings).forEach(k => readings[k] = null);
+  Object.keys(connectionType).forEach(k => connectionType[k] = null);
+
+  // Reset cards
+  ['thermo','bp','spo2','glucose'].forEach(id => {
+    setCardState(id, '');
+    setReadingDisplay(id, '<div class="reading-placeholder">——— Awaiting Device ———</div>');
+    updateBar(id, 0, 'var(--green)');
+    document.getElementById(`proto-${id}`).textContent = 'BLE · USB · WiFi';
+    document.querySelectorAll(`[id$=-${id}]`).forEach(b => b.classList.remove('active'));
+    document.getElementById(`rd-${id}`).className = 'r-dot';
+    wavePoints[id] = [];
+  });
+
+  // Reset symptoms
+  selectedSyms.clear();
+  document.querySelectorAll('.stag').forEach(t => t.classList.remove('on'));
+  document.getElementById('symText').value = '';
+
+  // Reset patient
+  ['patName','patAge','patHistory'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('patGender').value = '';
+
+  // Hide results
+  document.getElementById('resultsSection').classList.remove('visible');
+
+  setSystemStatus('', 'SYSTEM IDLE');
+  document.getElementById('btnDiagnose').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('System reset — ready for new patient');
+}
+
+</script>
+
+</body>
+</html>

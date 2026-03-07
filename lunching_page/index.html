@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MediAI — The Future of Diagnostics</title>
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="cursor" id="cursor"></div>
+        <div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ── NAV ── -->
+        <nav>
+            <a class="nav-logo" href="#">Medi<span>AI</span></a>
+            <ul class="nav-links">
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="#instruments">Instruments</a></li>
+                <li><a href="#features">Features</a></li>
+            </ul>
+        </nav>
+
+<!-- ── HERO ── -->
+        <section class="hero">
+
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+
+        <div class="hero-bg-text">DIAGNOSE</div>
+
+  <!-- Animated ECG line -->
+        <div class="ecg-container">
+            <svg class="ecg-svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path id="ecgPath" d="M0,60 L100,60 L120,60 L130,10 L140,110 L150,60 L180,60 L300,60 L320,60 L330,10 L340,110 L350,60 L380,60 L500,60 L520,60 L530,10 L540,110 L550,60 L580,60 L700,60 L720,60 L730,10 L740,110 L750,60 L780,60 L900,60 L920,60 L930,10 L940,110 L950,60 L980,60 L1100,60 L1120,60 L1130,10 L1140,110 L1150,60 L1200,60"
+                fill="none" stroke="rgba(0,212,170,1)" stroke-width="2">
+                <animateTransform attributeName="transform" type="translate" from="-300,0" to="0,0" dur="2s" repeatCount="indefinite"/>
+            </path>
+            </svg>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-eyebrow">
+            <div class="eyebrow-line"></div>
+            <span class="eyebrow-text">AI-Powered Medical Diagnostics</span>
+            <div class="live-dot"></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(240,237,230,0.3);letter-spacing:2px;text-transform:uppercase;">Live</span>
+        </div>
+
+    <h1 class="hero-headline">
+      <span class="line-1">Your Doctor</span>
+      <span class="line-2">Is Now</span>
+      <span class="line-3">A Machine.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Real-time vitals from your instruments. Zero manual entry. 
+      AI-powered diagnosis in seconds — connecting hardware directly to intelligence.
+    </p>
+
+    <div class="hero-cta-row">
+      <a href="ai-doctor-hardware.html" class="btn-get-started">
+        <span>Get Started</span>
+        <span class="arrow">→</span>
+      </a>
+      <a href="#how" class="btn-secondary-link">See how it works</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-val">4</div>
+      <div class="stat-label">Instruments Supported</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">3</div>
+      <div class="stat-label">Connection Protocols</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Manual Entry Required</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">AI</div>
+      <div class="stat-label">Powered Diagnosis</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARQUEE ── -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <!-- Duplicated for seamless loop -->
+    <div class="marquee-item"><div class="dot"></div>Bluetooth BLE</div>
+    <div class="marquee-item"><div class="dot"></div>USB Serial</div>
+    <div class="marquee-item"><div class="dot"></div>WiFi HTTP</div>
+    <div class="marquee-item"><div class="dot"></div>Auto-Detection</div>
+    <div class="marquee-item"><div class="dot"></div>Real-Time Streaming</div>
+    <div class="marquee-item"><div class="dot"></div>AI Diagnostics</div>
+    <div class="marquee-item"><div class="dot"></div>Zero Manual Entry</div>
+    <div class="marquee-item"><div class="dot"></div>Clinical Accuracy</div>
+    <div class="marquee-item"><div class="dot"></div>Thermometer</div>
+    <div class="marquee-item"><div class="dot"></div>BP Monitor</div>
+    <div class="marquee-item"><div class="dot"></div>Pulse Oximeter</div>
+    <div class="marquee-item"><div class="dot"></div>Glucometer</div>
+    <div class="marquee-item"><div class="dot"></div>Bluetooth BLE</div>
+    <div class="marquee-item"><div class="dot"></div>USB Serial</div>
+    <div class="marquee-item"><div class="dot"></div>WiFi HTTP</div>
+    <div class="marquee-item"><div class="dot"></div>Auto-Detection</div>
+    <div class="marquee-item"><div class="dot"></div>Real-Time Streaming</div>
+    <div class="marquee-item"><div class="dot"></div>AI Diagnostics</div>
+    <div class="marquee-item"><div class="dot"></div>Zero Manual Entry</div>
+    <div class="marquee-item"><div class="dot"></div>Clinical Accuracy</div>
+    <div class="marquee-item"><div class="dot"></div>Thermometer</div>
+    <div class="marquee-item"><div class="dot"></div>BP Monitor</div>
+    <div class="marquee-item"><div class="dot"></div>Pulse Oximeter</div>
+    <div class="marquee-item"><div class="dot"></div>Glucometer</div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div id="how">
+  <div class="section">
+    <div class="section-tag reveal">Process</div>
+    <h2 class="section-title reveal reveal-delay-1">How It<br>Works.</h2>
+
+    <div class="steps">
+      <div class="step reveal" data-num="1">
+        <span class="step-icon">🔌</span>
+        <div class="step-title">Connect Your Instruments</div>
+        <p class="step-desc">Plug in via Bluetooth BLE, USB Serial, or WiFi. The system auto-detects your device and begins streaming data instantly — no drivers, no setup.</p>
+        <span class="step-tag">Auto Protocol Detection</span>
+      </div>
+      <div class="step reveal reveal-delay-1" data-num="2">
+        <span class="step-icon">📡</span>
+        <div class="step-title">Live Data Streams In</div>
+        <p class="step-desc">Temperature, blood pressure, SpO₂, and glucose readings flow in automatically. Watch vitals update in real time with live waveforms and status indicators.</p>
+        <span class="step-tag">Real-Time Streaming</span>
+      </div>
+      <div class="step reveal reveal-delay-2" data-num="3">
+        <span class="step-icon">🧠</span>
+        <div class="step-title">AI Diagnoses Instantly</div>
+        <p class="step-desc">Claude AI cross-references all vitals with patient symptoms to deliver a full clinical report — primary diagnosis, severity, recommended tests, and red flags.</p>
+        <span class="step-tag">Powered by Claude AI</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── INSTRUMENTS ── -->
+<div id="instruments">
+  <div class="instruments-showcase">
+    <div class="instruments-inner">
+      <div class="section-tag reveal">Supported Hardware</div>
+      <h2 class="section-title reveal reveal-delay-1">Four<br>Instruments.</h2>
+      <p class="reveal reveal-delay-2" style="font-size:1.1rem;color:rgba(240,237,230,0.4);font-style:italic;margin-top:0.5rem;max-width:500px;line-height:1.7;">Every device connects via three universal protocols — works with most consumer and clinical-grade hardware on the market.</p>
+
+      <div class="instruments-grid">
+        <div class="inst-card reveal">
+          <span class="inst-emoji">🌡️</span>
+          <div class="inst-name">Thermometer</div>
+          <div class="inst-detail">
+            Body Temperature<br>
+            Normal: 97.0 – 99.5°F<br>
+            Fever detection & tracking
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-1">
+          <span class="inst-emoji">🩺</span>
+          <div class="inst-name">BP Monitor</div>
+          <div class="inst-detail">
+            Systolic / Diastolic<br>
+            Normal: 90/60 – 130/85<br>
+            Hypertension screening
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-2">
+          <span class="inst-emoji">🫁</span>
+          <div class="inst-name">Pulse Oximeter</div>
+          <div class="inst-detail">
+            SpO₂ + Heart Rate<br>
+            Normal: ≥95% · 60–100bpm<br>
+            Respiratory monitoring
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-3">
+          <span class="inst-emoji">🩸</span>
+          <div class="inst-name">Glucometer</div>
+          <div class="inst-detail">
+            Blood Glucose Level<br>
+            Normal (fasting): 70–100 mg/dL<br>
+            Diabetes management
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURES ── -->
+<div id="features">
+  <div class="features-section">
+    <div class="section-tag reveal">Capabilities</div>
+    <h2 class="section-title reveal reveal-delay-1">Built for<br>Accuracy.</h2>
+
+    <div class="features-grid">
+      <div class="feat reveal">
+        <div class="feat-num">01 — Connection</div>
+        <div class="feat-title">Triple Protocol Support</div>
+        <p class="feat-desc">Bluetooth BLE, USB Serial, and WiFi HTTP all supported simultaneously. The app connects to whichever protocol your device speaks.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">02 — Intelligence</div>
+        <div class="feat-title">Claude AI Diagnostic Engine</div>
+        <p class="feat-desc">Powered by Anthropic's Claude — analyzes all vitals together with patient symptoms for differential diagnosis, not just individual readings.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-num">03 — Alerts</div>
+        <div class="feat-title">Abnormal Value Detection</div>
+        <p class="feat-desc">Every reading is automatically flagged against clinical normal ranges. Color-coded indicators warn of borderline and critical values in real time.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">04 — Report</div>
+        <div class="feat-title">Full Clinical Report</div>
+        <p class="feat-desc">Primary diagnosis, severity rating, clinical reasoning, differential diagnoses, recommended tests, immediate actions, and emergency red flags.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-num">05 — Demo</div>
+        <div class="feat-title">Simulation Mode</div>
+        <p class="feat-desc">No hardware yet? Every instrument has a Demo mode that simulates realistic live readings — test the full system before your devices arrive.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">06 — Privacy</div>
+        <div class="feat-title">Runs in Your Browser</div>
+        <p class="feat-desc">No data stored on any server. All hardware communication is direct from your browser to your device. Patient data never leaves your machine.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FINAL CTA ── -->
+<section class="final-cta">
+  <div class="final-bg"></div>
+  <div class="final-cta-inner">
+    <h2 class="final-headline reveal">
+      Ready to<br><span class="accent">Diagnose?</span>
+    </h2>
+    <p class="final-sub reveal reveal-delay-1">Connect your instruments. Let the AI do the rest.</p>
+    <div class="reveal reveal-delay-2">
+      <a href="https://finance-data.page.gd/" class="btn-get-started" style="font-size:1.4rem;padding:1.3rem 3.5rem;display:inline-flex;">
+        <span>Launch MediAI Pro</span>
+        <span class="arrow" style="font-size:1.2rem">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<footer>
+  <div class="footer-brand">Medi<span>AI</span> Pro</div>
+  <div class="footer-disc">
+    For informational and triage assistance only.<br>
+    Not a substitute for professional medical diagnosis or treatment.<br>
+    Always consult a licensed healthcare provider.
+  </div>
+</footer>

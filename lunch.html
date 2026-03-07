@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediAI — The Future of Diagnostics</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --ink: #060c18;
+  --paper: #f0ede6;
+  --paper2: #e8e4db;
+  --accent: #0a3fff;
+  --accent2: #00d4aa;
+  --red: #e8002d;
+  --muted: #8a8070;
+  --dark: #0d1525;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Crimson Pro', Georgia, serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* Custom cursor */
+.cursor {
+  width: 10px; height: 10px;
+  background: var(--accent2);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.15s ease, background 0.2s;
+  transform: translate(-50%, -50%);
+}
+
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1px solid rgba(0,212,170,0.5);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transition: transform 0.35s ease, width 0.3s, height 0.3s, border-color 0.2s;
+  transform: translate(-50%, -50%);
+}
+
+body:has(a:hover) .cursor { transform: translate(-50%,-50%) scale(2); background: var(--accent); }
+body:has(a:hover) .cursor-ring { width: 60px; height: 60px; border-color: rgba(10,63,255,0.4); }
+body:has(button:hover) .cursor { transform: translate(-50%,-50%) scale(2.5); background: var(--red); }
+
+/* ─── NOISE OVERLAY ─── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.028;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 3rem;
+  mix-blend-mode: normal;
+}
+
+nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(6,12,24,0.9), transparent);
+  pointer-events: none;
+}
+
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 3px;
+  color: var(--paper);
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-logo span { color: var(--accent2); }
+
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-links a {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.5);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--paper); }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Big rotated background text */
+.hero-bg-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(120px, 22vw, 280px);
+  letter-spacing: -5px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(240,237,230,0.04);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* Animated ECG line */
+.ecg-container {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  transform: translateY(-50%);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ecg-svg { width: 100%; height: 120px; }
+
+/* Glowing orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(10,63,255,0.18), transparent 70%);
+  top: -200px; right: -150px;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,212,170,0.12), transparent 70%);
+  bottom: -100px; left: -100px;
+  animation: orbFloat 10s ease-in-out infinite reverse;
+}
+
+.orb-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(232,0,45,0.08), transparent 70%);
+  top: 30%; left: 40%;
+  animation: orbFloat 12s ease-in-out infinite 2s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -20px); }
+  66% { transform: translate(-20px, 30px); }
+}
+
+/* Hero content */
+.hero-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8rem 3rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.8s ease both;
+}
+
+.eyebrow-line {
+  width: 40px; height: 1px;
+  background: var(--accent2);
+}
+
+.eyebrow-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: livePulse 1s infinite;
+  box-shadow: 0 0 8px var(--red);
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.5); }
+}
+
+.hero-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5rem, 13vw, 11rem);
+  line-height: 0.88;
+  letter-spacing: -2px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.8s ease 0.1s both;
+}
+
+.hero-headline .line-1 { display: block; color: var(--paper); }
+.hero-headline .line-2 {
+  display: block;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--paper);
+  opacity: 0.35;
+}
+.hero-headline .line-3 {
+  display: block;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 300;
+  color: rgba(240,237,230,0.55);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 3rem;
+  font-style: italic;
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+
+.hero-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  animation: fadeUp 0.8s ease 0.3s both;
+}
+
+/* THE button */
+.btn-get-started {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 2.8rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: none;
+  border-radius: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: none;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+.btn-get-started::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-get-started:hover {
+  color: var(--paper);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(10,63,255,0.3);
+}
+
+.btn-get-started:hover::before { transform: translateX(0); }
+
+.btn-get-started span, .btn-get-started .arrow {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s;
+}
+
+.btn-get-started:hover .arrow { transform: translateX(5px); }
+
+.btn-secondary-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.4);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(240,237,230,0.15);
+  padding-bottom: 2px;
+  transition: all 0.2s;
+}
+
+.btn-secondary-link:hover { color: var(--paper); border-color: var(--paper); }
+
+/* Hero stats ticker */
+.hero-stats {
+  position: relative;
+  z-index: 10;
+  border-top: 1px solid rgba(240,237,230,0.08);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  animation: fadeUp 0.8s ease 0.5s both;
+}
+
+@media (max-width: 640px) {
+  .hero-stats { grid-template-columns: repeat(2,1fr); }
+  nav { padding: 1.2rem 1.5rem; }
+  .nav-links { display: none; }
+  .hero-content { padding: 7rem 1.5rem 3rem; }
+}
+
+.stat-item {
+  padding: 1.8rem 3rem;
+  border-right: 1px solid rgba(240,237,230,0.08);
+  transition: background 0.3s;
+}
+
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: rgba(240,237,230,0.02); }
+
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 1px;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--paper), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.3);
+  margin-top: 0.3rem;
+}
+
+/* ─── HOW IT WORKS ─── */
+.section {
+  padding: 8rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+@media (max-width: 640px) { .section { padding: 5rem 1.5rem; } }
+
+.section-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.section-tag::before {
+  content: '';
+  width: 30px; height: 1px;
+  background: var(--accent2);
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+}
+
+/* Steps */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 5rem;
+  border: 1px solid rgba(240,237,230,0.08);
+}
+
+@media (max-width: 768px) { .steps { grid-template-columns: 1fr; } }
+
+.step {
+  padding: 3rem 2.5rem;
+  border-right: 1px solid rgba(240,237,230,0.08);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+
+.step:last-child { border-right: none; }
+.step:hover { background: rgba(240,237,230,0.025); }
+
+.step::before {
+  content: attr(data-num);
+  position: absolute;
+  top: -20px; right: -10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 8rem;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(240,237,230,0.04);
+  pointer-events: none;
+  line-height: 1;
+}
+
+.step-icon {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.step-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.8rem;
+  color: var(--paper);
+}
+
+.step-desc {
+  font-size: 1rem;
+  color: rgba(240,237,230,0.45);
+  line-height: 1.7;
+  font-style: italic;
+}
+
+.step-tag {
+  display: inline-block;
+  margin-top: 1.2rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid rgba(240,237,230,0.12);
+  color: rgba(240,237,230,0.35);
+  border-radius: 2px;
+}
+
+/* ─── INSTRUMENTS ─── */
+.instruments-showcase {
+  background: rgba(240,237,230,0.02);
+  border-top: 1px solid rgba(240,237,230,0.06);
+  border-bottom: 1px solid rgba(240,237,230,0.06);
+  padding: 6rem 3rem;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) { .instruments-showcase { padding: 4rem 1.5rem; } }
+
+.instruments-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.instruments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(240,237,230,0.07);
+  border: 1px solid rgba(240,237,230,0.07);
+  margin-top: 4rem;
+}
+
+@media (max-width: 640px) { .instruments-grid { grid-template-columns: repeat(2,1fr); } }
+
+.inst-card {
+  background: var(--ink);
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  cursor: default;
+}
+
+.inst-card:hover { background: #0a1225; }
+
+.inst-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+  transform-origin: left;
+}
+
+.inst-card:hover::after { transform: scaleX(1); }
+
+.inst-emoji {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1.2rem;
+}
+
+.inst-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.inst-detail {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: rgba(240,237,230,0.3);
+  letter-spacing: 1px;
+  line-height: 1.8;
+}
+
+.inst-protocols {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.proto-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(0,212,170,0.25);
+  color: var(--accent2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+/* ─── MARQUEE ─── */
+.marquee-wrap {
+  border-top: 1px solid rgba(240,237,230,0.06);
+  border-bottom: 1px solid rgba(240,237,230,0.06);
+  padding: 1.2rem 0;
+  overflow: hidden;
+  background: rgba(10,63,255,0.04);
+}
+
+.marquee-track {
+  display: flex;
+  gap: 0;
+  animation: marquee 20s linear infinite;
+  white-space: nowrap;
+}
+
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 2.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.25);
+}
+
+.marquee-item .dot {
+  width: 4px; height: 4px;
+  background: var(--accent2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ─── FEATURE GRID ─── */
+.features-section {
+  padding: 8rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) { .features-section { padding: 5rem 1.5rem; } }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(240,237,230,0.07);
+  border: 1px solid rgba(240,237,230,0.07);
+  margin-top: 4rem;
+}
+
+@media (max-width: 640px) { .features-grid { grid-template-columns: 1fr; } }
+
+.feat {
+  background: var(--ink);
+  padding: 2.5rem;
+  transition: background 0.3s;
+  position: relative;
+}
+
+.feat:hover { background: rgba(240,237,230,0.02); }
+
+.feat-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--accent2);
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+.feat-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.7rem;
+}
+
+.feat-desc {
+  font-size: 0.98rem;
+  color: rgba(240,237,230,0.4);
+  line-height: 1.7;
+  font-style: italic;
+}
+
+/* ─── FINAL CTA ─── */
+.final-cta {
+  position: relative;
+  text-align: center;
+  padding: 10rem 3rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(240,237,230,0.06);
+}
+
+.final-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(10,63,255,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.final-cta-inner { position: relative; z-index: 1; }
+
+.final-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.5rem, 9vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -1px;
+  margin-bottom: 1.5rem;
+}
+
+.final-headline .accent { color: var(--accent2); }
+
+.final-sub {
+  font-size: 1.2rem;
+  color: rgba(240,237,230,0.4);
+  font-style: italic;
+  margin-bottom: 3.5rem;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid rgba(240,237,230,0.06);
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  footer { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem 1.5rem; }
+}
+
+.footer-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 3px;
+  color: rgba(240,237,230,0.4);
+}
+
+.footer-brand span { color: var(--accent2); }
+
+.footer-disc {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: rgba(240,237,230,0.2);
+  letter-spacing: 1px;
+  text-align: right;
+  line-height: 1.7;
+  max-width: 400px;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Intersection observer classes */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">Medi<span>AI</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#instruments">Instruments</a></li>
+    <li><a href="#features">Features</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-bg-text">DIAGNOSE</div>
+
+  <!-- Animated ECG line -->
+  <div class="ecg-container">
+    <svg class="ecg-svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path id="ecgPath" d="M0,60 L100,60 L120,60 L130,10 L140,110 L150,60 L180,60 L300,60 L320,60 L330,10 L340,110 L350,60 L380,60 L500,60 L520,60 L530,10 L540,110 L550,60 L580,60 L700,60 L720,60 L730,10 L740,110 L750,60 L780,60 L900,60 L920,60 L930,10 L940,110 L950,60 L980,60 L1100,60 L1120,60 L1130,10 L1140,110 L1150,60 L1200,60"
+        fill="none" stroke="rgba(0,212,170,1)" stroke-width="2">
+        <animateTransform attributeName="transform" type="translate" from="-300,0" to="0,0" dur="2s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">AI-Powered Medical Diagnostics</span>
+      <div class="live-dot"></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(240,237,230,0.3);letter-spacing:2px;text-transform:uppercase;">Live</span>
+    </div>
+
+    <h1 class="hero-headline">
+      <span class="line-1">Your Doctor</span>
+      <span class="line-2">Is Now</span>
+      <span class="line-3">A Machine.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Real-time vitals from your instruments. Zero manual entry. 
+      AI-powered diagnosis in seconds — connecting hardware directly to intelligence.
+    </p>
+
+    <div class="hero-cta-row">
+      <a href="ai-doctor-hardware.html" class="btn-get-started">
+        <span>Get Started</span>
+        <span class="arrow">→</span>
+      </a>
+      <a href="#how" class="btn-secondary-link">See how it works</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-val">4</div>
+      <div class="stat-label">Instruments Supported</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">3</div>
+      <div class="stat-label">Connection Protocols</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Manual Entry Required</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">AI</div>
+      <div class="stat-label">Powered Diagnosis</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARQUEE ── -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <!-- Duplicated for seamless loop -->
+    <div class="marquee-item"><div class="dot"></div>Bluetooth BLE</div>
+    <div class="marquee-item"><div class="dot"></div>USB Serial</div>
+    <div class="marquee-item"><div class="dot"></div>WiFi HTTP</div>
+    <div class="marquee-item"><div class="dot"></div>Auto-Detection</div>
+    <div class="marquee-item"><div class="dot"></div>Real-Time Streaming</div>
+    <div class="marquee-item"><div class="dot"></div>AI Diagnostics</div>
+    <div class="marquee-item"><div class="dot"></div>Zero Manual Entry</div>
+    <div class="marquee-item"><div class="dot"></div>Clinical Accuracy</div>
+    <div class="marquee-item"><div class="dot"></div>Thermometer</div>
+    <div class="marquee-item"><div class="dot"></div>BP Monitor</div>
+    <div class="marquee-item"><div class="dot"></div>Pulse Oximeter</div>
+    <div class="marquee-item"><div class="dot"></div>Glucometer</div>
+    <div class="marquee-item"><div class="dot"></div>Bluetooth BLE</div>
+    <div class="marquee-item"><div class="dot"></div>USB Serial</div>
+    <div class="marquee-item"><div class="dot"></div>WiFi HTTP</div>
+    <div class="marquee-item"><div class="dot"></div>Auto-Detection</div>
+    <div class="marquee-item"><div class="dot"></div>Real-Time Streaming</div>
+    <div class="marquee-item"><div class="dot"></div>AI Diagnostics</div>
+    <div class="marquee-item"><div class="dot"></div>Zero Manual Entry</div>
+    <div class="marquee-item"><div class="dot"></div>Clinical Accuracy</div>
+    <div class="marquee-item"><div class="dot"></div>Thermometer</div>
+    <div class="marquee-item"><div class="dot"></div>BP Monitor</div>
+    <div class="marquee-item"><div class="dot"></div>Pulse Oximeter</div>
+    <div class="marquee-item"><div class="dot"></div>Glucometer</div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div id="how">
+  <div class="section">
+    <div class="section-tag reveal">Process</div>
+    <h2 class="section-title reveal reveal-delay-1">How It<br>Works.</h2>
+
+    <div class="steps">
+      <div class="step reveal" data-num="1">
+        <span class="step-icon">🔌</span>
+        <div class="step-title">Connect Your Instruments</div>
+        <p class="step-desc">Plug in via Bluetooth BLE, USB Serial, or WiFi. The system auto-detects your device and begins streaming data instantly — no drivers, no setup.</p>
+        <span class="step-tag">Auto Protocol Detection</span>
+      </div>
+      <div class="step reveal reveal-delay-1" data-num="2">
+        <span class="step-icon">📡</span>
+        <div class="step-title">Live Data Streams In</div>
+        <p class="step-desc">Temperature, blood pressure, SpO₂, and glucose readings flow in automatically. Watch vitals update in real time with live waveforms and status indicators.</p>
+        <span class="step-tag">Real-Time Streaming</span>
+      </div>
+      <div class="step reveal reveal-delay-2" data-num="3">
+        <span class="step-icon">🧠</span>
+        <div class="step-title">AI Diagnoses Instantly</div>
+        <p class="step-desc">Claude AI cross-references all vitals with patient symptoms to deliver a full clinical report — primary diagnosis, severity, recommended tests, and red flags.</p>
+        <span class="step-tag">Powered by Claude AI</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── INSTRUMENTS ── -->
+<div id="instruments">
+  <div class="instruments-showcase">
+    <div class="instruments-inner">
+      <div class="section-tag reveal">Supported Hardware</div>
+      <h2 class="section-title reveal reveal-delay-1">Four<br>Instruments.</h2>
+      <p class="reveal reveal-delay-2" style="font-size:1.1rem;color:rgba(240,237,230,0.4);font-style:italic;margin-top:0.5rem;max-width:500px;line-height:1.7;">Every device connects via three universal protocols — works with most consumer and clinical-grade hardware on the market.</p>
+
+      <div class="instruments-grid">
+        <div class="inst-card reveal">
+          <span class="inst-emoji">🌡️</span>
+          <div class="inst-name">Thermometer</div>
+          <div class="inst-detail">
+            Body Temperature<br>
+            Normal: 97.0 – 99.5°F<br>
+            Fever detection & tracking
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-1">
+          <span class="inst-emoji">🩺</span>
+          <div class="inst-name">BP Monitor</div>
+          <div class="inst-detail">
+            Systolic / Diastolic<br>
+            Normal: 90/60 – 130/85<br>
+            Hypertension screening
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-2">
+          <span class="inst-emoji">🫁</span>
+          <div class="inst-name">Pulse Oximeter</div>
+          <div class="inst-detail">
+            SpO₂ + Heart Rate<br>
+            Normal: ≥95% · 60–100bpm<br>
+            Respiratory monitoring
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+        <div class="inst-card reveal reveal-delay-3">
+          <span class="inst-emoji">🩸</span>
+          <div class="inst-name">Glucometer</div>
+          <div class="inst-detail">
+            Blood Glucose Level<br>
+            Normal (fasting): 70–100 mg/dL<br>
+            Diabetes management
+          </div>
+          <div class="inst-protocols">
+            <span class="proto-badge">BLE</span>
+            <span class="proto-badge">USB</span>
+            <span class="proto-badge">WiFi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURES ── -->
+<div id="features">
+  <div class="features-section">
+    <div class="section-tag reveal">Capabilities</div>
+    <h2 class="section-title reveal reveal-delay-1">Built for<br>Accuracy.</h2>
+
+    <div class="features-grid">
+      <div class="feat reveal">
+        <div class="feat-num">01 — Connection</div>
+        <div class="feat-title">Triple Protocol Support</div>
+        <p class="feat-desc">Bluetooth BLE, USB Serial, and WiFi HTTP all supported simultaneously. The app connects to whichever protocol your device speaks.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">02 — Intelligence</div>
+        <div class="feat-title">Claude AI Diagnostic Engine</div>
+        <p class="feat-desc">Powered by Anthropic's Claude — analyzes all vitals together with patient symptoms for differential diagnosis, not just individual readings.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-num">03 — Alerts</div>
+        <div class="feat-title">Abnormal Value Detection</div>
+        <p class="feat-desc">Every reading is automatically flagged against clinical normal ranges. Color-coded indicators warn of borderline and critical values in real time.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">04 — Report</div>
+        <div class="feat-title">Full Clinical Report</div>
+        <p class="feat-desc">Primary diagnosis, severity rating, clinical reasoning, differential diagnoses, recommended tests, immediate actions, and emergency red flags.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-num">05 — Demo</div>
+        <div class="feat-title">Simulation Mode</div>
+        <p class="feat-desc">No hardware yet? Every instrument has a Demo mode that simulates realistic live readings — test the full system before your devices arrive.</p>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-num">06 — Privacy</div>
+        <div class="feat-title">Runs in Your Browser</div>
+        <p class="feat-desc">No data stored on any server. All hardware communication is direct from your browser to your device. Patient data never leaves your machine.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FINAL CTA ── -->
+<section class="final-cta">
+  <div class="final-bg"></div>
+  <div class="final-cta-inner">
+    <h2 class="final-headline reveal">
+      Ready to<br><span class="accent">Diagnose?</span>
+    </h2>
+    <p class="final-sub reveal reveal-delay-1">Connect your instruments. Let the AI do the rest.</p>
+    <div class="reveal reveal-delay-2">
+      <a href="https://finance-data.page.gd/" class="btn-get-started" style="font-size:1.4rem;padding:1.3rem 3.5rem;display:inline-flex;">
+        <span>Launch MediAI Pro</span>
+        <span class="arrow" style="font-size:1.2rem">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<footer>
+  <div class="footer-brand">Medi<span>AI</span> Pro</div>
+  <div class="footer-disc">
+    For informational and triage assistance only.<br>
+    Not a substitute for professional medical diagnosis or treatment.<br>
+    Always consult a licensed healthcare provider.
+  </div>
+</footer>
+
+<script>
+// ── Custom Cursor ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+(function animateCursor() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+})();
+
+// ── Intersection Observer ──
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+reveals.forEach(el => observer.observe(el));
+
+// ── Parallax orbs ──
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth - 0.5) * 20;
+  const y = (e.clientY / window.innerHeight - 0.5) * 20;
+  document.querySelector('.orb-1').style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+  document.querySelector('.orb-2').style.transform = `translate(${-x * 0.3}px, ${-y * 0.3}px)`;
+  document.querySelector('.orb-3').style.transform = `translate(${x * 0.8}px, ${y * 0.8}px)`;
+});
+</script>
+
+</body>
+</html>
